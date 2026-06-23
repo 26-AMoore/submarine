@@ -8,6 +8,7 @@ pub struct PlayerBundle {
 	pub player: Player,
 	pub name: Name,
 	pub position: Position,
+	pub transform: Transform,
 	pub mesh: Mesh2d,
 	pub sprite: Sprite,
 }
@@ -20,6 +21,7 @@ impl Default for PlayerBundle {
 			position: Default::default(),
 			mesh: Default::default(),
 			sprite: Sprite::default(),
+			transform: Transform::default(),
 		}
 	}
 }
@@ -32,6 +34,7 @@ impl PlayerBundle {
 			position,
 			mesh,
 			sprite: sprite,
+			transform: Transform::default(),
 		}
 	}
 }
@@ -54,9 +57,9 @@ impl Default for Position {
 pub fn update_player_sprite(
 	mut command: Commands,
 	sprite: Query<&mut Sprite, With<Player>>,
-	position: Query<&Position, With<Player>>,
+	transform: Query<&Transform, With<Player>>,
 ) {
-	let position = position.single().unwrap();
+	let transform = transform.single().unwrap();
 }
 
 pub fn print_position(query: Query<&Position, With<Player>>) {
@@ -69,20 +72,29 @@ pub fn print_position(query: Query<&Position, With<Player>>) {
 
 pub fn handle_player_movment(
 	keyboard_input: Res<ButtonInput<KeyCode>>,
-	mut query: Query<&mut Position, With<Player>>,
+	mut position: Query<&mut Position, With<Player>>,
+	mut transform: Query<&mut Transform, With<Player>>,
 ) {
-	for mut position in &mut query {
-		if keyboard_input.pressed(KeyCode::KeyW) {
-			position.y = position.y + 1.0;
-		}
-		if keyboard_input.pressed(KeyCode::KeyA) {
-			position.x = position.x - 1.0;
-		}
-		if keyboard_input.pressed(KeyCode::KeyS) {
-			position.y = position.y - 1.0;
-		}
-		if keyboard_input.pressed(KeyCode::KeyD) {
-			position.x = position.x + 1.0;
-		}
+	let position: &mut Position = position.single_mut().unwrap().into_inner();
+
+	if keyboard_input.pressed(KeyCode::KeyW) {
+		position.y = position.y + 1.0;
 	}
+	if keyboard_input.pressed(KeyCode::KeyA) {
+		position.x = position.x - 1.0;
+	}
+	if keyboard_input.pressed(KeyCode::KeyS) {
+		position.y = position.y - 1.0;
+	}
+	if keyboard_input.pressed(KeyCode::KeyD) {
+		position.x = position.x + 1.0;
+	}
+
+	let transform = transform.single_mut().unwrap().into_inner();
+
+	*transform = transform.with_translation(Vec3 {
+		x: position.x,
+		y: position.y,
+		z: 1.0,
+	});
 }
